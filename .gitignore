@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+
+# YOLO training results
+runs/
+
+# Dataset (ถ้า dataset ใหญ่ไม่ต้อง push)
+Dataset/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+
+# model weights
+*.pt
