@@ -1,63 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-
-<title>Smart Waste Sorting</title>
-
-<style>
-
-body{
-font-family:Arial;
-background:#f2f2f2;
-text-align:center;
-}
-
-.container{
-display:grid;
-grid-template-columns:200px 200px;
-gap:30px;
-justify-content:center;
-margin-top:80px;
-}
-
-.card{
-background:white;
-padding:40px;
-border-radius:12px;
-font-size:22px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
-cursor:pointer;
-transition:0.2s;
-}
-
-.card:hover{
-transform:scale(1.05);
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Waste Dashboard</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
-<h1>Smart Waste Sorting</h1>
+    <header>
+        <h1>Smart <span>Waste</span> Dashboard</h1>
+        <p class="subtitle">ระบบติดตามและคัดแยกขยะอัตโนมัติ (Limit 10)</p>
+    </header>
 
-<div class="container">
+    <div class="container">
+        <div id="card-bottle" class="card">
+            <span class="icon">🧴</span>
+            <span class="label">Bottle</span>
+            <div class="count-group">
+                <span class="count" id="count-bottle">0</span>
+                <span class="limit-label">/ 10</span>
+            </div>
+            <div class="progress-bg"><div id="bar-bottle" class="progress-fill"></div></div>
+        </div>
 
-<div class="card" onclick="go('bottle')">Bottle</div>
-<div class="card" onclick="go('glass')">Glass</div>
-<div class="card" onclick="go('can')">Can</div>
-<div class="card" onclick="go('other')">Other</div>
+        <div id="card-glass" class="card">
+            <span class="icon">🍷</span>
+            <span class="label">Glass</span>
+            <div class="count-group">
+                <span class="count" id="count-glass">0</span>
+                <span class="limit-label">/ 10</span>
+            </div>
+            <div class="progress-bg"><div id="bar-glass" class="progress-fill"></div></div>
+        </div>
 
-</div>
+        <div id="card-can" class="card">
+            <span class="icon">🥫</span>
+            <span class="label">Can</span>
+            <div class="count-group">
+                <span class="count" id="count-can">0</span>
+                <span class="limit-label">/ 10</span>
+            </div>
+            <div class="progress-bg"><div id="bar-can" class="progress-fill"></div></div>
+        </div>
 
-<script>
+        <div id="card-other" class="card">
+            <span class="icon">📦</span>
+            <span class="label">Other</span>
+            <div class="count-group">
+                <span class="count" id="count-other">0</span>
+                <span class="limit-label">/ 10</span>
+            </div>
+            <div class="progress-bg"><div id="bar-other" class="progress-fill"></div></div>
+        </div>
+    </div>
 
-function go(type){
-location.href="/type/"+type
-}
+    <div class="admin-controls">
+        <button onclick="resetData()" class="reset-btn">
+            <span class="btn-icon">🔄</span> Reset All Counters
+        </button>
+    </div>
 
-</script>
+    <script>
+        const LIMIT = 10;
 
+        function update() {
+            fetch("/data")
+                .then(res => res.json())
+                .then(data => {
+                    const types = ['bottle', 'glass', 'can', 'other'];
+                    
+                    types.forEach(type => {
+                        const countEl = document.getElementById("count-" + type);
+                        const barEl = document.getElementById("bar-" + type);
+                        const cardEl = document.getElementById("card-" + type);
+                        
+                        let value = data[type] || 0;
+                        if (value > LIMIT) value = LIMIT;
+
+                        if (countEl.innerText != value) {
+                            countEl.style.transform = "scale(1.2)";
+                            setTimeout(() => countEl.style.transform = "scale(1)", 200);
+                        }
+
+                        countEl.innerText = value;
+                        const percentage = (value / LIMIT) * 100;
+                        barEl.style.width = percentage + "%";
+
+                        if (value >= LIMIT) {
+                            cardEl.classList.add('full');
+                        } else {
+                            cardEl.classList.remove('full');
+                        }
+                    });
+                })
+                .catch(err => console.error("Fetch error:", err));
+        }
+
+        // ฟังก์ชันสำหรับกด Reset
+        function resetData() {
+            if(confirm("คุณต้องการล้างค่าจำนวนขยะทั้งหมดใช่หรือไม่?")) {
+                fetch("/reset", { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert("รีเซ็ตข้อมูลสำเร็จ!");
+                        update(); // อัปเดตหน้าจอทันที
+                    });
+            }
+        }
+
+        setInterval(update, 1000);
+        update();
+    </script>
 </body>
 </html>

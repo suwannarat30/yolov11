@@ -35,7 +35,7 @@ SERVER_URL = "http://localhost:5000/add"
 # 🧠 โหลด YOLO
 # =========================
 print("Loading YOLO model...")
-model = YOLO("Dataset/dataset2/runs/pet-bottle-can-glass-v1/weights/best.pt")
+model = YOLO("yolov11/best.pt")
 print("YOLO Loaded!")
 
 
