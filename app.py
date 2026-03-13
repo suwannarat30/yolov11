@@ -1,9 +1,9 @@
 from flask import Flask, render_template, jsonify, request
+import os # เพิ่มบรรทัดนี้เพื่อดึงค่าจากระบบ
 
-# 1. ต้องมีบรรทัดนี้เพื่อสร้างตัวแปร 'app' ก่อน
 app = Flask(__name__)
 
-# 2. ตัวแปรเก็บข้อมูลขยะ (สมมติค่าเริ่มต้นเป็น 0)
+# ตัวแปรเก็บข้อมูลขยะ
 waste_counts = {
     "bottle": 0,
     "glass": 0,
@@ -19,7 +19,6 @@ def index():
 def get_data():
     return jsonify(waste_counts)
 
-# 3. ส่วนของ Reset ที่คุณเพิ่งเพิ่มเข้าไป
 @app.route('/reset', methods=['POST'])
 def reset_data():
     global waste_counts
@@ -28,6 +27,9 @@ def reset_data():
     }
     return jsonify({"status": "success"})
 
-# 4. ส่วนสำหรับรันโปรแกรม
+# ส่วนสำหรับรันโปรแกรม (ปรับปรุงเพื่อ Render)
 if __name__ == '__main__':
-    app.run(debug=True)
+    # ดึงค่า PORT ที่ Render กำหนดให้ ถ้าไม่มี (รันในคอมตัวเอง) ให้ใช้ 5000
+    port = int(os.environ.get("PORT", 5000))
+    # ตั้ง host='0.0.0.0' เพื่อให้คนภายนอกเข้าดูเว็บได้
+    app.run(host='0.0.0.0', port=port)
