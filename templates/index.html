@@ -1,118 +1,266 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Waste Dashboard</title>
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Waste Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <header>
-        <h1>Smart <span>Waste</span> Dashboard</h1>
-        <p class="subtitle">ระบบติดตามและคัดแยกขยะอัตโนมัติ (Limit 10)</p>
-    </header>
-
-    <div class="container">
-        <div id="card-bottle" class="card">
-            <span class="icon">🧴</span>
-            <span class="label">Bottle</span>
-            <div class="count-group">
-                <span class="count" id="count-bottle">0</span>
-                <span class="limit-label">/ 10</span>
-            </div>
-            <div class="progress-bg"><div id="bar-bottle" class="progress-fill"></div></div>
-        </div>
-
-        <div id="card-glass" class="card">
-            <span class="icon">🍷</span>
-            <span class="label">Glass</span>
-            <div class="count-group">
-                <span class="count" id="count-glass">0</span>
-                <span class="limit-label">/ 10</span>
-            </div>
-            <div class="progress-bg"><div id="bar-glass" class="progress-fill"></div></div>
-        </div>
-
-        <div id="card-can" class="card">
-            <span class="icon">🥫</span>
-            <span class="label">Can</span>
-            <div class="count-group">
-                <span class="count" id="count-can">0</span>
-                <span class="limit-label">/ 10</span>
-            </div>
-            <div class="progress-bg"><div id="bar-can" class="progress-fill"></div></div>
-        </div>
-
-        <div id="card-other" class="card">
-            <span class="icon">📦</span>
-            <span class="label">Other</span>
-            <div class="count-group">
-                <span class="count" id="count-other">0</span>
-                <span class="limit-label">/ 10</span>
-            </div>
-            <div class="progress-bg"><div id="bar-other" class="progress-fill"></div></div>
-        </div>
+<header>
+  <div class="logo">
+    <div class="logo-icon">♻️</div>
+    <div>
+      <div class="logo-text">Smart <span>Waste</span> Dashboard</div>
+      <div class="logo-sub">ระบบติดตามและคัดแยกขยะอัตโนมัติ</div>
     </div>
+  </div>
+  <div class="header-time">อัปเดตล่าสุด: <span id="clock">--:--:--</span></div>
+</header>
 
-    <div class="admin-controls">
-        <button onclick="resetData()" class="reset-btn">
-            <span class="btn-icon">🔄</span> Reset All Counters
-        </button>
+<!-- Summary bar -->
+<div class="summary-bar">
+  <div class="summary-item">
+    <div class="summary-dot" style="background:#3b9eff"></div>
+    ถังทั้งหมด: <span class="summary-val" id="sum-total">4</span>
+  </div>
+  <div class="summary-item">
+    <div class="summary-dot" style="background:#f85149"></div>
+    ถังเต็ม: <span class="summary-val" id="sum-full">0</span>
+  </div>
+  <div class="summary-item">
+    <div class="summary-dot" style="background:#f0a04b"></div>
+    ใกล้เต็ม: <span class="summary-val" id="sum-near">0</span>
+  </div>
+  <div class="summary-item">
+    <div class="summary-dot" style="background:#2dd4a0"></div>
+    ปกติ: <span class="summary-val" id="sum-ok">4</span>
+  </div>
+</div>
+
+<!-- Alert banner (แสดงเมื่อถังเต็ม) -->
+<div class="alert-banner" id="alert-banner">
+  <div class="alert-icon">🚨</div>
+  <div>
+    <div style="font-weight:600; margin-bottom:6px;">ถังต่อไปนี้เต็มแล้ว — กรุณาเก็บรวบรวม</div>
+    <div class="alert-list" id="alert-list"></div>
+  </div>
+</div>
+
+<!-- Bin cards -->
+<main class="container">
+
+  <div id="card-bottle" class="card" data-type="bottle">
+    <div class="no-entry-overlay"><div class="no-entry-sign"></div><div class="no-entry-text">ถังเต็ม</div></div>
+    <div class="full-badge">🔴 เต็มแล้ว!</div>
+    <div class="near-badge">🟡 ใกล้เต็ม</div>
+    <div class="bin-header">
+      <div class="bin-emoji">🧴</div>
+      <div class="bin-info">
+        <div class="bin-name">ขวดพลาสติก</div>
+        <div class="bin-type">BOTTLE · รองรับ <span id="lim-bottle">—</span> ชิ้น</div>
+      </div>
     </div>
+    <div class="bin-stats">
+      <div>
+        <div class="stat-label">มีอยู่ในถัง</div>
+        <span class="count" id="count-bottle" style="color:#3b9eff">0</span><span class="unit"> ชิ้น</span>
+      </div>
+      <div style="text-align:right">
+        <div class="stat-label">รับได้สูงสุด</div>
+        <span class="stat-max"><span id="max-bottle">—</span> ชิ้น</span>
+      </div>
+    </div>
+    <div class="pct-row"><span class="stat-pct" id="pct-bottle" style="color:#3b9eff">เต็ม 0%</span></div>
+    <div class="progress-bg"><div id="bar-bottle" class="progress-fill" style="background:#3b9eff"></div></div>
+  </div>
 
-    <script>
-        const LIMIT = 10;
+  <div id="card-glass" class="card" data-type="glass">
+    <div class="no-entry-overlay"><div class="no-entry-sign"></div><div class="no-entry-text">ถังเต็ม</div></div>
+    <div class="full-badge">🔴 เต็มแล้ว!</div>
+    <div class="near-badge">🟡 ใกล้เต็ม</div>
+    <div class="bin-header">
+      <div class="bin-emoji">🍷</div>
+      <div class="bin-info">
+        <div class="bin-name">ขวดแก้ว</div>
+        <div class="bin-type">GLASS · รองรับ <span id="lim-glass">—</span> ชิ้น</div>
+      </div>
+    </div>
+    <div class="bin-stats">
+      <div>
+        <div class="stat-label">มีอยู่ในถัง</div>
+        <span class="count" id="count-glass" style="color:#2dd4a0">0</span><span class="unit"> ชิ้น</span>
+      </div>
+      <div style="text-align:right">
+        <div class="stat-label">รับได้สูงสุด</div>
+        <span class="stat-max"><span id="max-glass">—</span> ชิ้น</span>
+      </div>
+    </div>
+    <div class="pct-row"><span class="stat-pct" id="pct-glass" style="color:#2dd4a0">เต็ม 0%</span></div>
+    <div class="progress-bg"><div id="bar-glass" class="progress-fill" style="background:#2dd4a0"></div></div>
+  </div>
 
-        function update() {
-            fetch("/data")
-                .then(res => res.json())
-                .then(data => {
-                    const types = ['bottle', 'glass', 'can', 'other'];
-                    
-                    types.forEach(type => {
-                        const countEl = document.getElementById("count-" + type);
-                        const barEl = document.getElementById("bar-" + type);
-                        const cardEl = document.getElementById("card-" + type);
-                        
-                        let value = data[type] || 0;
-                        if (value > LIMIT) value = LIMIT;
+  <div id="card-can" class="card" data-type="can">
+    <div class="no-entry-overlay"><div class="no-entry-sign"></div><div class="no-entry-text">ถังเต็ม</div></div>
+    <div class="full-badge">🔴 เต็มแล้ว!</div>
+    <div class="near-badge">🟡 ใกล้เต็ม</div>
+    <div class="bin-header">
+      <div class="bin-emoji">🥫</div>
+      <div class="bin-info">
+        <div class="bin-name">กระป๋องอะลูมิเนียม</div>
+        <div class="bin-type">CAN · รองรับ <span id="lim-can">—</span> ชิ้น</div>
+      </div>
+    </div>
+    <div class="bin-stats">
+      <div>
+        <div class="stat-label">มีอยู่ในถัง</div>
+        <span class="count" id="count-can" style="color:#f0a04b">0</span><span class="unit"> ชิ้น</span>
+      </div>
+      <div style="text-align:right">
+        <div class="stat-label">รับได้สูงสุด</div>
+        <span class="stat-max"><span id="max-can">—</span> ชิ้น</span>
+      </div>
+    </div>
+    <div class="pct-row"><span class="stat-pct" id="pct-can" style="color:#f0a04b">เต็ม 0%</span></div>
+    <div class="progress-bg"><div id="bar-can" class="progress-fill" style="background:#f0a04b"></div></div>
+  </div>
 
-                        if (countEl.innerText != value) {
-                            countEl.style.transform = "scale(1.2)";
-                            setTimeout(() => countEl.style.transform = "scale(1)", 200);
-                        }
+  <div id="card-other" class="card" data-type="other">
+    <div class="no-entry-overlay"><div class="no-entry-sign"></div><div class="no-entry-text">ถังเต็ม</div></div>
+    <div class="full-badge">🔴 เต็มแล้ว!</div>
+    <div class="near-badge">🟡 ใกล้เต็ม</div>
+    <div class="bin-header">
+      <div class="bin-emoji">🗑️</div>
+      <div class="bin-info">
+        <div class="bin-name">ถังอื่นๆ</div>
+        <div class="bin-type">OTHER · รองรับ <span id="lim-other">—</span> ชิ้น</div>
+      </div>
+    </div>
+    <div class="bin-stats">
+      <div>
+        <div class="stat-label">มีอยู่ในถัง</div>
+        <span class="count" id="count-other" style="color:#a78bfa">0</span><span class="unit"> ชิ้น</span>
+      </div>
+      <div style="text-align:right">
+        <div class="stat-label">รับได้สูงสุด</div>
+        <span class="stat-max"><span id="max-other">—</span> ชิ้น</span>
+      </div>
+    </div>
+    <div class="pct-row"><span class="stat-pct" id="pct-other" style="color:#a78bfa">เต็ม 0%</span></div>
+    <div class="progress-bg"><div id="bar-other" class="progress-fill" style="background:#a78bfa"></div></div>
+  </div>
 
-                        countEl.innerText = value;
-                        const percentage = (value / LIMIT) * 100;
-                        barEl.style.width = percentage + "%";
+</main>
 
-                        if (value >= LIMIT) {
-                            cardEl.classList.add('full');
-                        } else {
-                            cardEl.classList.remove('full');
-                        }
-                    });
-                })
-                .catch(err => console.error("Fetch error:", err));
+<!-- Reset button -->
+<div class="admin-controls">
+  <button onclick="resetData()" class="reset-btn">
+    <span>🔄</span> Reset All Counters
+  </button>
+</div>
+
+<script>
+const COLORS = {
+  bottle:  '#3b9eff',
+  glass:   '#2dd4a0',
+  can:     '#f0a04b',
+  other:   '#a78bfa'
+};
+
+const NAMES = {
+  bottle: '🧴 ขวดพลาสติก',
+  glass:  '🍷 ขวดแก้ว',
+  can:    '🥫 กระป๋อง',
+  other:  '🗑️ ถังอื่นๆ'
+};
+
+function update() {
+  fetch("/data")
+    .then(res => res.json())
+    .then(({ counts, limits }) => {
+      const types = ['bottle', 'glass', 'can', 'other'];
+      let fullList = [];
+      let nFull = 0, nNear = 0, nOk = 0;
+
+      types.forEach(type => {
+        const val   = Math.min(counts[type] || 0, limits[type] || 10);
+        const limit = limits[type] || 10;
+        const pct   = Math.round((val / limit) * 100);
+        const color = COLORS[type];
+
+        // Update limit display
+        document.getElementById(`lim-${type}`).textContent = limit;
+        document.getElementById(`max-${type}`).textContent = limit;
+
+        // Animate count change
+        const countEl = document.getElementById(`count-${type}`);
+        if (parseInt(countEl.textContent) !== val) {
+          countEl.style.transform = 'scale(1.25)';
+          setTimeout(() => countEl.style.transform = 'scale(1)', 200);
         }
+        countEl.textContent = val;
 
-        // ฟังก์ชันสำหรับกด Reset
-        function resetData() {
-            if(confirm("คุณต้องการล้างค่าจำนวนขยะทั้งหมดใช่หรือไม่?")) {
-                fetch("/reset", { method: 'POST' })
-                    .then(res => res.json())
-                    .then(data => {
-                        alert("รีเซ็ตข้อมูลสำเร็จ!");
-                        update(); // อัปเดตหน้าจอทันที
-                    });
-            }
-        }
+        // Progress bar
+        const bar  = document.getElementById(`bar-${type}`);
+        const card = document.getElementById(`card-${type}`);
+        const pctEl = document.getElementById(`pct-${type}`);
 
-        setInterval(update, 1000);
-        update();
-    </script>
+        let status = 'ok';
+        if (pct >= 100) status = 'full';
+        else if (pct >= 80) status = 'near';
+
+        const displayColor = status === 'full' ? '#f85149' : status === 'near' ? '#f0a04b' : color;
+
+        bar.style.width    = pct + '%';
+        bar.style.background = displayColor;
+        pctEl.textContent  = `เต็ม ${pct}%`;
+        pctEl.style.color  = displayColor;
+        countEl.style.color = displayColor;
+
+        card.classList.remove('full', 'near');
+        if (status === 'full') { card.classList.add('full'); fullList.push(NAMES[type]); nFull++; }
+        else if (status === 'near') { card.classList.add('near'); nNear++; }
+        else nOk++;
+      });
+
+      // Summary bar
+      document.getElementById('sum-full').textContent = nFull;
+      document.getElementById('sum-near').textContent = nNear;
+      document.getElementById('sum-ok').textContent   = nOk;
+
+      // Alert banner
+      const banner = document.getElementById('alert-banner');
+      const list   = document.getElementById('alert-list');
+      if (fullList.length > 0) {
+        banner.classList.add('visible');
+        list.innerHTML = fullList.map(n => `<span class="alert-tag">${n}</span>`).join('');
+      } else {
+        banner.classList.remove('visible');
+      }
+    })
+    .catch(err => console.error('Fetch error:', err));
+}
+
+function resetData() {
+  if (confirm('คุณต้องการล้างค่าจำนวนขยะทั้งหมดใช่หรือไม่?')) {
+    fetch('/reset', { method: 'POST' })
+      .then(res => res.json())
+      .then(() => { alert('รีเซ็ตข้อมูลสำเร็จ!'); update(); });
+  }
+}
+
+// Clock
+function tick() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+tick();
+setInterval(tick, 1000);
+setInterval(update, 1000);
+update();
+</script>
+
 </body>
 </html>

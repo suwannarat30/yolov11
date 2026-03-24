@@ -2,46 +2,55 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
+# กำหนดความจุของแต่ละถัง (ปรับได้ที่นี่)
+LIMITS = {
+    "bottle": 10,
+    "glass":  10,
+    "can":    10,
+    "other":  10
+}
+
 data = {
     "bottle": 0,
-    "glass": 0,
-    "can": 0,
-    "other": 0
+    "glass":  0,
+    "can":    0,
+    "other":  0
 }
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/type/<name>")
-def type_page(name):
-    return render_template("type.html", waste=name)
-
 @app.route("/data")
 def get_data():
-    return jsonify(data)
+    return jsonify({"counts": data, "limits": LIMITS})
 
 @app.route("/add", methods=["POST"])
 def add():
-
     waste = request.json["type"].lower()
 
-    # แปลงชื่อจาก YOLO
     if "bottle" in waste:
-        data["bottle"] += 1
-
+        key = "bottle"
     elif "glass" in waste:
-        data["glass"] += 1
-
+        key = "glass"
     elif "can" in waste:
-        data["can"] += 1
-
+        key = "can"
     else:
-        data["other"] += 1
+        key = "other"
+
+    # ไม่บวกเกิน limit
+    if data[key] < LIMITS[key]:
+        data[key] += 1
 
     print("Update:", data)
+    return jsonify({"status": "ok", "counts": data, "limits": LIMITS})
 
-    return jsonify({"status":"ok"})
+@app.route("/reset", methods=["POST"])
+def reset():
+    for key in data:
+        data[key] = 0
+    print("Reset:", data)
+    return jsonify({"status": "ok", "counts": data, "limits": LIMITS})
 
-
-app.run(host="0.0.0.0", port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

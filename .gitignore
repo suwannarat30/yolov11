@@ -4,15 +4,22 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Virtual Environment
-venv/
-env/
+# Dataset (สำคัญ)
+classifier_data/
+Dataset/
+*.jpg
+*.png
+
+# Model weights
+*.pt
+*.pth
 
 # YOLO training results
 runs/
 
-# Dataset (ถ้า dataset ใหญ่ไม่ต้อง push)
-Dataset/
+# Virtual Environment
+venv/
+env/
 
 # VS Code
 .vscode/
@@ -21,8 +28,5 @@ Dataset/
 .DS_Store
 Thumbs.db
 
-# logs
+# Logs
 *.log
-
-# model weights
-*.pt
